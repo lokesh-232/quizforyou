@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Quiz</title>
+<link rel="stylesheet" href="optionquiz.css">
+</head>
+<body>
+<h1>Create Quiz</h1>
+<label for="subjectName">Subject Name:</label>
+<input type="text" id="subjectName" placeholder="Enter subject name..."><br><br>
+<button onclick="addQuestion()">Add Question</button>
+<button onclick="submitQuiz()">Submit Quiz</button>
+
+<div id="questionContainer"></div>
+
+<script>
+function addQuestion() {
+  var questionContainer = document.getElementById("questionContainer");
+  
+  var questionDiv = document.createElement("div");
+  questionDiv.classList.add("question");
+  
+  var questionInput = document.createElement("input");
+  questionInput.type = "text";
+  questionInput.placeholder = "Enter question...";
+  questionDiv.appendChild(questionInput);
+
+  var typeSelect = document.createElement("select");
+  var optionTypes = ["Select Type", "Multiple Options", "Single Option", "Text Answer"];
+  for (var i = 0; i < optionTypes.length; i++) {
+    var option = document.createElement("option");
+    option.value = i;
+    option.text = optionTypes[i];
+    typeSelect.appendChild(option);
+  }
+  questionDiv.appendChild(typeSelect);
+  
+  questionContainer.appendChild(questionDiv);
+  
+  typeSelect.addEventListener("change", function() {
+    var selectedType = parseInt(this.value);
+    var numOptionsInput = questionDiv.querySelector(".num-options");
+    var optionsContainer = questionDiv.querySelector(".options-container");
+    var correctAnswerInput = questionDiv.querySelector(".correct-answer");
+    
+    if (numOptionsInput) {
+      numOptionsInput.remove();
+    }
+    if (optionsContainer) {
+      optionsContainer.remove();
+    }
+    if (correctAnswerInput) {
+      correctAnswerInput.remove();
+    }
+    
+    if (selectedType === 1 || selectedType === 2) { // Multiple Options or Single Option
+      numOptionsInput = document.createElement("input");
+      numOptionsInput.classList.add("num-options");
+      numOptionsInput.type = "number";
+      numOptionsInput.placeholder = "Number of options";
+      numOptionsInput.min = "2"; // Set minimum number of options
+      questionDiv.appendChild(numOptionsInput);
+      
+      numOptionsInput.addEventListener("input", function() {
+        var numOptions = parseInt(this.value);
+        createOptionInputs(numOptions, questionDiv, selectedType);
+      });
+    } else if (selectedType === 3) { // Text Answer
+      textAnswer(questionDiv);
+    }
+  });
+}
+
+function createOptionInputs(numOptions, questionDiv, selectedType) {
+  var optionsContainer = document.createElement("div");
+  optionsContainer.classList.add("options-container");
+  
+  // Remove existing option inputs if any
+  var existingOptionsContainer = questionDiv.querySelector(".options-container");
+  if (existingOptionsContainer) {
+    existingOptionsContainer.remove();
+  }
+
+  for (var i = 0; i < numOptions; i++) {
+    var optionInput = document.createElement("input");
+    optionInput.type = "text";
+    optionInput.placeholder = "Option " + (i + 1);
+    optionsContainer.appendChild(optionInput);
+
+    if (selectedType === 1) { // Multiple Options
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = i;
+      optionsContainer.appendChild(checkbox);
+    } else if (selectedType === 2) { // Single Option
+      var radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "correctAnswer" + questionDiv.id;
+      radio.value = i;
+      optionsContainer.appendChild(radio);
+    }
+  }
+  
+  // Append the options container to the question div
+  questionDiv.appendChild(optionsContainer);
+}
+
+
+function textAnswer(questionDiv) {
+  var correctAnswerInput = document.createElement("input");
+  correctAnswerInput.classList.add("correct-answer");
+  correctAnswerInput.type = "text";
+  correctAnswerInput.placeholder = "Enter correct answer...";
+  questionDiv.appendChild(correctAnswerInput);
+}
+
+function submitQuiz() {
+  var subjectName = document.getElementById("subjectName").value;
+  var questions = document.querySelectorAll(".question");
+  var quizData = [];
+  
+  questions.forEach(function(questionDiv, index) {
+    var question = questionDiv.querySelector("input[type='text']").value;
+    var typeSelect = questionDiv.querySelector("select");
+    var selectedType = parseInt(typeSelect.value);
+    var numOptionsInput = questionDiv.querySelector(".num-options");
+    var numOptions = numOptionsInput ? parseInt(numOptionsInput.value) : null;
+    var options = [];
+    var optionInputs = questionDiv.querySelectorAll(".options-container input[type='text']");
+    optionInputs.forEach(function(optionInput) {
+      options.push(optionInput.value);
+    });
+
+    var correctAnswer;
+    if (selectedType === 1 || selectedType === 2) { // Multiple Options or Single Option
+      correctAnswer = saveCorrectAnswers(questionDiv, selectedType);
+    } else if (selectedType === 3) { // Text Answer
+      correctAnswer = questionDiv.querySelector(".correct-answer").value;
+    }
+
+    quizData.push({
+      question: question,
+      type: typeSelect.options[typeSelect.selectedIndex].text,
+      options: options,
+      correctAnswer: correctAnswer,
+      numOptions: numOptions
+    });
+  });
+  
+  // Store quiz data and subject name in local storage
+ var quizDataJson = JSON.stringify(quizData);
+ const hostId = parseInt(localStorage.getItem("hostId"));
+  // Redirect based on host ID
+  if (hostId === 1) {
+    link="quiz1.html?quizData=" + encodeURIComponent(quizDataJson) + "&numQuestions=" + encodeURIComponent(questions.length);
+  } else if (hostId === 2) {
+    link= "quiz2.html?quizData=" + encodeURIComponent(quizDataJson) + "&numQuestions=" + encodeURIComponent(questions.length);
+  } else {
+    // Handle invalid host ID
+    alert("Invalid host ID");
+  }
+ 
+  localStorage.setItem("subjectName"+hostId, subjectName );
+  
+localStorage.setItem("link",link);
+
+  window.location.href="quizActivation.html";
+}
+
+function saveCorrectAnswers(questionDiv, selectedType) {
+  var correctAnswers = [];
+  if (selectedType === 1) { // Multiple Options
+    var checkboxInputs = questionDiv.querySelectorAll(".options-container input[type='checkbox']");
+    checkboxInputs.forEach(function(checkboxInput, index) {
+      if (checkboxInput.checked) {
+        correctAnswers.push(index);
+      }
+    });
+  } else if (selectedType === 2) { // Single Option
+    var checkedRadio = questionDiv.querySelector(".options-container input[type='radio']:checked");
+    if (checkedRadio) {
+      correctAnswers.push(parseInt(checkedRadio.value));
+    }
+  }
+  return correctAnswers;
+}
+</script>
+</body>
+</html>

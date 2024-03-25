@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artistic Percentage Display</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .container {
+    text-align: center;
+  }
+
+  .percentage {
+    font-size: 48px;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 20px;
+  }
+
+  .meter {
+    height: 40px;
+    width: 300px;
+    background-color: #ddd;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar {
+    height: 100%;
+    background-color: #4CAF50;
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: fill 2s ease-in-out forwards;
+  }
+
+  @keyframes fill {
+    from { width: 0; }
+    to { width: var(--percentage); }
+  }
+
+  .text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="percentage" id="percentage">0%</div>
+  <div class="meter">
+    <div class="bar" id="bar" style="--percentage: 0;"></div>
+    <div class="text" id="text">0%</div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Retrieve percentage from local storage
+  var percentage = parseInt(localStorage.getItem("percentage"));
+
+  // Set percentage text content
+  var percentageDisplay = document.getElementById("percentage");
+  percentageDisplay.textContent = percentage + "%";
+
+  // Set percentage for bar width
+  var bar = document.getElementById("bar");
+  bar.style.setProperty("--percentage", percentage + "%");
+
+  // Animation delay for text
+  var text = document.getElementById("text");
+  setTimeout(function() {
+    text.textContent = percentage + "%";
+  }, 2000); // Delay text update to match the animation duration
+});
+</script>
+</body>
+</html>

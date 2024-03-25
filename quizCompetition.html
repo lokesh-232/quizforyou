@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Competition</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1 {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  p {
+    text-align: center;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+  }
+
+  li {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  a {
+    text-decoration: none;
+    color: rgb(250, 249, 249);
+    padding: 10px 20px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    background-color: black;
+  }
+
+  a:hover {
+    background-color: red;
+    color: white;
+  }
+</style>
+</head>
+<body>
+<h1>Quiz Competition</h1>
+<p>Choose a quiz to participate:</p>
+<ul id="quizList">
+  <!-- Placeholder items for quizzes -->
+</ul>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var hostId = localStorage.getItem("hostId");
+  var quizList = document.getElementById("quizList");
+    var link=localStorage.getItem("link");
+  // Number of quizzes based on host ID
+  var numQuizzes = parseInt(hostId);
+
+  // Generate quiz links based on the host ID
+  for (var i = 1; i <= numQuizzes; i++) {
+    var quizLink = link;
+    var subjectName = localStorage.getItem("subjectName" + i);
+    var activationDateTime = new Date(localStorage.getItem("activationDateTime" + i));
+    var duration = parseInt(localStorage.getItem("duration" + i));
+    var endTime = new Date(activationDateTime);
+    endTime.setMinutes(endTime.getMinutes() + duration);
+
+    var li = document.createElement("li");
+    var quizLinkAnchor = document.createElement("a");
+    quizLinkAnchor.href = quizLink;
+    quizLinkAnchor.textContent = "Quiz " ;
+    li.appendChild(quizLinkAnchor);
+
+    // Display activation details
+    var activationDetails = document.createElement("span");
+    if (activationDateTime && !isNaN(duration)) {
+      activationDetails.textContent = `Activation: ${activationDateTime.toLocaleString()} Duration: ${duration} minutes`;
+      if (new Date() > endTime) {
+        activationDetails.textContent += " (Activation time is over)";
+      }
+    } else {
+      activationDetails.textContent = "Activation details not available";
+    }
+    li.appendChild(activationDetails);
+
+    quizList.appendChild(li);
+  }
+});
+</script>
+</body>
+</html>
+ 

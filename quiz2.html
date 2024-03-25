@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz </title>
+<link rel="stylesheet" href="quiz1.css">
+</head>
+<body>
+<h1>Quiz </h1>
+<div id="quizContainer"></div>
+<div id="timer"></div>
+<p id="result"></p>
+<p id="activationDetails"></p>
+<button id="submitBtn" style="display:none;" onclick="submitQuiz()">Submit Quiz</button>
+
+<script>
+// Retrieve quiz data from local storage
+var urlParams = new URLSearchParams(window.location.search);
+var quizDataJson = urlParams.get('quizData');
+var numQuestions = urlParams.get('numQuestions');
+
+// Deserialize quiz data JSON string
+var quizData = JSON.parse(decodeURIComponent(quizDataJson));
+
+// Use quiz data and subject name as needed
+console.log("no of questions:", numQuestions);
+console.log("Quiz Data:", quizData);
+
+
+if (!quizData || isNaN(numQuestions)) {
+    // If quiz data or number of questions is not available, display an error message
+    document.getElementById("activationDetails").textContent = "Error: Quiz data or number of questions not found.";
+}
+
+// Retrieve activation details from local storage
+const activationDateTime = new Date(localStorage.getItem("activationDateTime"+2));
+const duration = parseInt(localStorage.getItem("duration"+2));
+
+// Get the current time
+const now = new Date();
+
+// Check if the given date and time have passed
+if (now > activationDateTime) {
+    // Calculate the time difference in milliseconds
+    const timeDifference = now - activationDateTime;
+
+    // Check if the quiz duration has also passed
+    if (timeDifference > duration) { // Duration is in milliseconds
+        // Quiz duration has passed
+        deactivateQuiz();
+    } else {
+        // Quiz is active
+        startQuiz();
+        document.getElementById("submitBtn").style.display = "inline"; 
+    }
+} else {
+    // Quiz is not active yet
+    const activationDetailsElement = document.getElementById("activationDetails");
+    activationDetailsElement.textContent = `Quiz will be activated on ${activationDateTime.toLocaleString()}.`;
+    const durationMinutes = Math.floor(duration / (1000 * 60));
+    const durationSeconds = Math.floor((duration / 1000) % 60);
+    activationDetailsElement.textContent += ` The quiz will be active for ${durationMinutes} minutes and ${durationSeconds} seconds.`;
+}
+
+function deactivateQuiz() {
+    // Disable user interaction with the quiz
+    document.getElementById("quizContainer").style.pointerEvents = "none";
+    document.getElementById("submitBtn").disabled = true;
+
+    // Display "Quiz Over" message
+    document.getElementById("timer").textContent = "Quiz Over";
+    document.getElementById("result").textContent = "The quiz is over.";
+}
+
+function startQuiz() {
+    // Hide activation details
+    document.getElementById("activationDetails").style.display = "none";
+
+    // Display quiz questions
+    var quizContainer = document.getElementById("quizContainer");
+    var prevFirstOption = ''; // Store the first option of the previous question
+    quizData.forEach(function(questionData, index) {
+        if (questionData.options[0] === prevFirstOption) {
+            return; // Skip printing this question
+        }
+        var questionDiv = document.createElement("div");
+        questionDiv.innerHTML = "<p>Question " + (index + 1) + ": " + questionData.question + "</p>";
+        
+        var optionsList = document.createElement("ul");
+        optionsList.classList.add("options-list");
+
+        // Check the type of options and generate corresponding input elements
+        if (questionData.type === "Multiple Options") {
+            questionData.options.forEach(function(option, optionIndex) {
+                var listItem = document.createElement("li");
+                var checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.name = "option" + index;
+                checkbox.value = optionIndex;
+                listItem.appendChild(checkbox);
+                listItem.appendChild(document.createTextNode(option));
+                optionsList.appendChild(listItem);
+            });
+        } else if (questionData.type === "Single Option") {
+            questionData.options.forEach(function(option, optionIndex) {
+                var listItem = document.createElement("li");
+                var radioBtn = document.createElement("input");
+                radioBtn.type = "radio";
+                radioBtn.name = "option" + index;
+                radioBtn.value = optionIndex;
+                listItem.appendChild(radioBtn);
+                listItem.appendChild(document.createTextNode(option));
+                optionsList.appendChild(listItem);
+            });
+        } else if (questionData.type === "Text Answer") {
+            var textInput = document.createElement("input");
+            textInput.type = "text";
+            textInput.name = "option" + index;
+            optionsList.appendChild(textInput);
+        }
+
+        questionDiv.appendChild(optionsList);
+        quizContainer.appendChild(questionDiv);
+
+        prevFirstOption = questionData.options[0]; // Update the previous first option
+    });
+
+    // Set up a timer for the quiz duration
+    const timerElement = document
+    .getElementById("timer");
+    let remainingTime = duration / 1000; // Convert duration to seconds
+    let minutes, seconds;
+
+    const timerInterval = setInterval(function() {
+        minutes = Math.floor(remainingTime / 60);
+        seconds = remainingTime % 60;
+
+        timerElement.textContent = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+
+        remainingTime--;
+
+        if (remainingTime < 0) {
+            clearInterval(timerInterval);
+            timerElement.textContent = "Time's up!";
+            document.getElementById("submitBtn").style.display = "inline"; // Show submit button after the quiz duration is over
+        }
+    }, 1000);
+}
+
+function submitQuiz() {
+    // Disable the submit button to prevent multiple submissions
+    document.getElementById("submitBtn").disabled = true;
+
+    var marks = 0;
+    quizData.forEach(function(questionData, index) {
+        var selectedOption;
+        if (questionData.type === "Text Answer") {
+            // For text answer questions, get the input value
+            selectedOption = document.querySelector("input[name='option" + index + "']").value;
+            // Check if the answer is correct
+            if (selectedOption.trim().toLowerCase() === questionData.correctAnswer.trim().toLowerCase()) {
+                marks++;
+            }
+        } else {
+            // For multiple options and single option questions, get the selected option(s)
+            selectedOption = document.querySelectorAll("input[name='option" + index + "']:checked");
+            var correctOptions = questionData.correctAnswer;
+            if (selectedOption && selectedOption.length > 0) {
+                var selectedIndexes = Array.from(selectedOption).map(option => parseInt(option.value));
+                // Check if all correct answers are included in the user's selection
+                var allCorrect = correctOptions.every(option => selectedIndexes.includes(option));
+                if (allCorrect) {
+                    marks++;
+                }
+            }
+        }
+    });
+    
+    // Calculate the percentage
+    var percentage = (marks / numQuestions) * 100;
+
+    // Store the percentage in local storage
+    localStorage.setItem("percentage", percentage);
+
+    // Redirect to the score display page with query parameters
+    window.location.href = `scoreDisplay.html?totalQuestions=${numQuestions}&correctAnswers=${marks}`;
+
+    var resultMessage = "You scored " + marks + " out of " + numQuestions + "!";
+    document.getElementById("result").textContent = resultMessage;
+}
+</script>
+
+</body>
+</html>

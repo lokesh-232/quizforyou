@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python-Like Interpreter</title>
+<style>
+textarea {
+    width: 100%;
+    height: 200px;
+}
+</style>
+</head>
+<body>
+
+<h2>Python-Like Interpreter</h2>
+<p>Enter your Python-like code below:</p>
+<textarea id="code" rows="10" cols="50">
+# Sample Python-like code
+def greet(name):
+    print("Hello, " + name + "!")
+    
+greet("world")
+</textarea><br>
+<button onclick="executeCode()">Execute</button><br>
+<div id="output"></div>
+
+<script>
+function executePythonCode(code) {
+    // Tokenize the input Python code
+    var tokens = tokenize(code);
+
+    // Parse the tokens into an abstract syntax tree (AST)
+    var ast = parse(tokens);
+
+    // Perform semantic analysis on the AST
+
+    // Generate JavaScript code from the AST
+
+    // Execute the generated JavaScript code
+    var output = eval(generateJavaScript(ast));
+
+    return output;
+}
+
+function tokenize(code) {
+    // Define regular expressions for different types of tokens
+    var keywords = /\b(def|if|elif|else|while|for|in|True|False|None)\b/g;
+    var identifiers = /[a-zA-Z_]\w*/g;
+    var literals = /\b\d+(\.\d+)?\b/g;
+    var operators = /[+\-*/=<>!]+/g;
+    var punctuation = /[(),:;]/g;
+
+    // Combine all regular expressions into a single regular expression
+    var regex = new RegExp([keywords, identifiers, literals, operators, punctuation].map(re => re.source).join('|'), 'g');
+
+    // Tokenize the code using the regular expression
+    var tokens = code.match(regex) || [];
+
+    // Remove any whitespace tokens
+    tokens = tokens.filter(token => /\S/.test(token));
+
+    return tokens;
+}
+
+
+function parse(tokens) {
+    // Index to keep track of the current token being processed
+    var index = 0;
+
+    // Helper function to consume tokens
+    function consume(expectedToken) {
+        var token = tokens[index++];
+        if (token !== expectedToken) {
+            throw new Error('Unexpected token: ' + token);
+        }
+    }
+
+    // Helper function to parse a function declaration
+    function parseFunctionDeclaration() {
+        consume('def'); // Consume the 'def' keyword
+        var functionName = tokens[index++]; // Get the function name
+        consume('('); // Consume the '(' token
+        // Parse function parameters
+        var parameters = [];
+        while (tokens[index] !== ')') {
+            parameters.push(tokens[index++]);
+            if (tokens[index] === ',') {
+                consume(','); // Consume the ',' token
+            }
+        }
+        consume(')'); // Consume the ')' token
+        // Return the function declaration node
+        return {
+            type: 'FunctionDeclaration',
+            name: functionName,
+            parameters: parameters
+        };
+    }
+
+    // Main parsing logic
+    var ast = [];
+    while (index < tokens.length) {
+        // Check the type of the current token and parse accordingly
+        if (tokens[index] === 'def') {
+            ast.push(parseFunctionDeclaration());
+        } else {
+            throw new Error('Unexpected token: ' + tokens[index]);
+        }
+    }
+
+    return ast;
+}
+
+
+function generateJavaScript(ast) {
+    // Initialize an empty string to store the generated JavaScript code
+    var jsCode = '';
+
+    // Helper function to generate JavaScript code for each node in the AST
+    function generateNode(node) {
+        switch (node.type) {
+            case 'FunctionDeclaration':
+                // Generate JavaScript code for function declaration
+                jsCode += 'function ' + node.name + '(' + node.parameters.join(', ') + ') {\n';
+                jsCode += '    // Function body goes here\n';
+                jsCode += '}\n';
+                break;
+            // Add cases for other node types as needed
+            default:
+                throw new Error('Unsupported node type: ' + node.type);
+        }
+    }
+
+    // Generate JavaScript code for each node in the AST
+    ast.forEach(function(node) {
+        generateNode(node);
+    });
+
+    return jsCode;
+}
+
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Quizzes</title>
+    <link rel="stylesheet" href="host.css">
+</head>
+<body>
+    
+
+    <section class="login-section">
+        <div class="container">
+            <h2>Login or Sign Up</h2>
+            <button onclick="showLogin()">Login</button>
+            <button onclick="showSignUp()">Sign Up</button>
+
+            <form id="signup-form" style="display:none;">
+                <input type="text" id="username" placeholder="Username"><br>
+                <input type="email" id="email" placeholder="Email"><br>
+                <input type="text" id="college" placeholder="College/School Name (optional)"><br>
+                <input type="text" id="subject" placeholder="Subject"><br>
+                <div class="password-container">
+                    <input type="password" id="password" placeholder="Password">
+                <span id="togglePassword" class="toggle-password" onclick="togglePasswordVisibility()">&#128065;</span>
+             
+                </div>
+                
+                <input type="password" id="confirm-password" placeholder="Confirm Password"><br>
+                <button type="submit" onclick="signup()">Sign Up</button>
+            </form>
+
+            <form id="login-form" style="display:none;">
+                <input type="text" id="login-username" placeholder="Username"><br>
+                <input type="password" id="login-password" placeholder="Password"><br>
+                <button type="submit" onclick="login()">Login</button>
+            </form>
+            
+            <p id="message"></p>
+            
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Host Quizzes. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="host.js"></script>
+</body>
+</html>
